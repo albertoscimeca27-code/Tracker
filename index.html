@@ -25,7 +25,6 @@
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 const {useState, useEffect, useRef} = React;
-
 // ── Constants ─────────────────────────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [{
   id: "misc",
@@ -2031,10 +2030,11 @@ function FinanceScreen({
   }, lbl);
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2144,9 +2144,10 @@ function FinanceScreen({
   }, tabBtn("overview", "Overview"), tabBtn("analytics", "Analytics"))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
-      padding: "16px 16px 120px",
+      minHeight: 0,
       overflowY: "auto",
-      WebkitOverflowScrolling: "touch"
+      WebkitOverflowScrolling: "touch",
+      padding: "16px 16px 120px"
     }
   }, mainTab === "overview" && /*#__PURE__*/React.createElement(React.Fragment, null, baselineSet && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2561,10 +2562,11 @@ function TodoScreen({
   }, [showInput]);
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2613,9 +2615,10 @@ function TodoScreen({
   }, pending.length, " to do · ", done.length, " completed")))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
-      padding: "16px 16px 120px",
+      minHeight: 0,
       overflowY: "auto",
-      WebkitOverflowScrolling: "touch"
+      WebkitOverflowScrolling: "touch",
+      padding: "16px 16px 120px"
     }
   }, showInput && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3354,10 +3357,11 @@ function FitnessScreen({
   }, "No activity logged.", /*#__PURE__*/React.createElement("br", null), "Tap a day to log one."));
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3432,6 +3436,7 @@ function FitnessScreen({
   }, v === "week" ? "This Week" : "Monthly")))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "14px 12px 80px"
@@ -4528,10 +4533,11 @@ function DietScreen({
   }, "No entries this month.", /*#__PURE__*/React.createElement("br", null), "Tap a day to log."));
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -4614,6 +4620,7 @@ function DietScreen({
   }, v === "week" ? "This Week" : "Monthly")))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "14px 12px 80px"
@@ -5390,10 +5397,11 @@ function SelfGrowthScreen({
   }, "Nothing logged this month.", /*#__PURE__*/React.createElement("br", null), "Tap a day to start."));
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5457,6 +5465,7 @@ function SelfGrowthScreen({
   }, v === "week" ? "This Week" : "Monthly")))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "14px 12px 80px"
@@ -6159,10 +6168,11 @@ function CareerScreen({
   };
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6222,6 +6232,7 @@ function CareerScreen({
   }, "+ Target"))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "20px 16px 80px"
@@ -6546,10 +6557,11 @@ function DailyScreen({
   });
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6620,6 +6632,7 @@ function DailyScreen({
   }, saved ? "✓ Saved" : "Save"))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "16px 16px 100px"
@@ -7456,10 +7469,11 @@ function ShoppingScreen({
   const unsectionedTotal = unsectioned.filter(i => !i.done).reduce((s, i) => s + i.price, 0);
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -7527,6 +7541,7 @@ function ShoppingScreen({
   }, items.filter(i => !i.done).length, " to buy · total €", fmtNum(totalAll))))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "16px 16px 100px"
@@ -8181,10 +8196,11 @@ function TravelScreen({
   const past = sortTrips(trips.filter(t => t.dateTo && t.dateTo < todayStr()));
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -8245,6 +8261,7 @@ function TravelScreen({
   }, cat.label))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "16px 16px 80px"
@@ -8709,10 +8726,11 @@ function PeopleScreen({
     };
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        minHeight: "100dvh",
+        height: "100dvh",
         background: "#111",
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
+        overflow: "hidden"
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -8824,6 +8842,7 @@ function PeopleScreen({
     }, person.name)), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
+        minHeight: 0,
         overflowY: "auto",
         WebkitOverflowScrolling: "touch",
         padding: "16px 16px 80px"
@@ -9196,10 +9215,11 @@ function PeopleScreen({
   const sorted = [...displayed].sort((a, b) => urgencyOrder(b) - urgencyOrder(a));
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9302,6 +9322,7 @@ function PeopleScreen({
   }, c.label)))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "16px 16px 80px"
@@ -9555,10 +9576,11 @@ function HealthScreen({
   const byStatus = s => items.filter(x => x.status === s);
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9613,6 +9635,7 @@ function HealthScreen({
   }, cat.label)), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "16px 16px 80px"
@@ -10138,10 +10161,11 @@ function BeautyScreen({
   }, "✕"))))));
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#111",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10177,6 +10201,7 @@ function BeautyScreen({
   }, cat.label)), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      minHeight: 0,
       overflowY: "auto",
       WebkitOverflowScrolling: "touch",
       padding: "16px 16px 80px"
@@ -10762,7 +10787,6 @@ function App() {
     onSave: handleManageSave
   }));
 }
-
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
   </script>
