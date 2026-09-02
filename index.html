@@ -1,31 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="Tracker"/>
-  <title>Tracker</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-    html,body,#root{height:100%;width:100%;overflow:hidden;}
-    body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;background:#C8C8CE;}
-    input,textarea,select,button{font-family:inherit;}
-    button{-webkit-appearance:none;appearance:none;}
-    ::-webkit-scrollbar{display:none;}
-    textarea{-webkit-overflow-scrolling:touch;}
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script>
-const React = window.React;
-const ReactDOM = window.ReactDOM;
-const {useState, useEffect, useRef} = React;
-// ── Constants ─────────────────────────────────────────────────────────────────
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Tracker"/><title>Tracker</title><style>*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}html,body,#root{height:100%;width:100%;overflow:hidden;}body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;background:#C8C8CE;}input,textarea,select,button{font-family:inherit;}button{-webkit-appearance:none;appearance:none;}::-webkit-scrollbar{display:none;}textarea{-webkit-overflow-scrolling:touch;}</style></head><body><div id="root"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script><script>const React=window.React;const ReactDOM=window.ReactDOM;const{useState,useEffect,useRef}=React;// ── Constants ─────────────────────────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [{
   id: "misc",
   label: "Daily",
@@ -118,7 +91,7 @@ const DEFAULT_CATEGORIES = [{
   bg: "#0F1E2E",
   type: "travel"
 }];
-const EXPENSE_CATEGORIES = ["Restaurants", "Groceries", "Transport", "Rent & Utilities", "Health", "Shopping", "Travel", "Entertainment", "Subscriptions", "Other"];
+const EXPENSE_CATEGORIES = ["Restaurants", "Groceries", "Transport", "Home", "Health", "Shopping", "Travel", "Entertainment", "Subscriptions", "Other"];
 const INCOME_CATEGORIES = ["Salary", "Bonus", "Gift", "Freelance", "Investment", "Other"];
 const EXPENSE_CATS_KEY = "alberto_expense_cats_v1";
 const PEOPLE_KEY = "alberto_people_v1";
@@ -185,6 +158,10 @@ function ls_set(k, v) {
 }
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function parseVal(v) {
+  if (!v && v !== 0) return 0;
+  return parseFloat(String(v).replace(/,/g, ".").replace(/[^0-9.-]/g, "")) || 0;
 }
 function fmtNum(n, decimals = 0) {
   if (n === null || n === undefined || isNaN(n)) return "—";
@@ -770,7 +747,8 @@ function FinanceForm({
   onClose,
   expenseCats
 }) {
-  const allExpCats = expenseCats && expenseCats.length > 0 ? expenseCats : EXPENSE_CATEGORIES;
+  const storedCats = ls_get(EXPENSE_CATS_KEY, EXPENSE_CATEGORIES);
+  const allExpCats = (expenseCats && expenseCats.length > 0 ? expenseCats : storedCats).length > 0 ? expenseCats && expenseCats.length > 0 ? expenseCats : storedCats : EXPENSE_CATEGORIES;
   const [type, setType] = useState("expense");
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState(PAYMENT_METHODS[0]);
@@ -1261,7 +1239,7 @@ function BaselineModal({
       margin: "0 0 6px"
     }
   }, m), /*#__PURE__*/React.createElement("input", {
-    type: "number",
+    type: "text",
     inputMode: "decimal",
     placeholder: "0.00",
     value: vals[m] || "",
@@ -1786,7 +1764,7 @@ function DebtModal({
       width: 90,
       textAlign: "right",
       fontWeight: 700,
-      color: parseFloat(d.amount) >= 0 ? "#16A34A" : "#DC2626"
+      color: parseVal(d.amount) >= 0 ? "#16A34A" : "#DC2626"
     }
   }), /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1887,11 +1865,11 @@ function FinanceScreen({
   const netTx = income - expenses;
   const accountBalances = PAYMENT_METHODS.map(m => ({
     method: m,
-    balance: parseFloat(baseline[m] || 0) + entries.filter(e => e.type === "income" && e.method === m).reduce((s, e) => s + e.amount, 0) - entries.filter(e => e.type === "expense" && e.method === m).reduce((s, e) => s + e.amount, 0) - entries.filter(e => e.type === "transfer" && e.method === m).reduce((s, e) => s + e.amount, 0) + entries.filter(e => e.type === "transfer" && e.toMethod === m).reduce((s, e) => s + e.amount, 0)
+    balance: parseVal(baseline[m] || 0) + entries.filter(e => e.type === "income" && e.method === m).reduce((s, e) => s + e.amount, 0) - entries.filter(e => e.type === "expense" && e.method === m).reduce((s, e) => s + e.amount, 0) - entries.filter(e => e.type === "transfer" && e.method === m).reduce((s, e) => s + e.amount, 0) + entries.filter(e => e.type === "transfer" && e.toMethod === m).reduce((s, e) => s + e.amount, 0)
   }));
-  const totalBaseline = PAYMENT_METHODS.reduce((s, m) => s + parseFloat(baseline[m] || 0), 0);
+  const totalBaseline = PAYMENT_METHODS.reduce((s, m) => s + parseVal(baseline[m] || 0), 0);
   const totalAvailable = totalBaseline + netTx;
-  const baselineSet = PAYMENT_METHODS.some(m => parseFloat(baseline[m] || 0) !== 0);
+  const baselineSet = PAYMENT_METHODS.some(m => parseVal(baseline[m] || 0) !== 0);
   const handleNotesChange = val => {
     setLocalNotes(val);
     clearTimeout(notesTimer.current);
@@ -2189,7 +2167,6 @@ function FinanceScreen({
       background: "#1C1C1E",
       borderRadius: 12,
       padding: "10px 12px",
-      borderLeft: `3px solid ${balance >= 0 ? "#4ADE80" : "#F87171"}`,
       border: `2px solid ${accountFilter === method ? cat.color : "transparent"}`,
       cursor: "pointer",
       textAlign: "left"
@@ -2207,7 +2184,36 @@ function FinanceScreen({
       fontWeight: 700,
       color: balance >= 0 ? "#4ADE80" : "#F87171"
     }
-  }, balance >= 0 ? "+" : "-", "€", fmtNum(Math.abs(balance)))))), baselineSet && accountFilter !== "all" && /*#__PURE__*/React.createElement("p", {
+  }, balance >= 0 ? "+" : "-", "€", fmtNum(Math.abs(balance))))), debts.length > 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowDebts(true),
+    style: {
+      background: "#1C1C1E",
+      borderRadius: 12,
+      padding: "10px 12px",
+      border: `2px solid ${debtsNet >= 0 ? "#4ADE8030" : "#F8717130"}`,
+      cursor: "pointer",
+      textAlign: "left"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 11,
+      color: "#636366"
+    }
+  }, "Debts & Credits"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "3px 0 0",
+      fontSize: 14,
+      fontWeight: 700,
+      color: debtsNet >= 0 ? "#4ADE80" : "#F87171"
+    }
+  }, debtsNet >= 0 ? "+" : "-", "€", fmtNum(Math.abs(debtsNet))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0 0",
+      fontSize: 10,
+      color: "#48484A"
+    }
+  }, debts.length, " position", debts.length !== 1 ? "s" : "", " · tap to edit"))), baselineSet && accountFilter !== "all" && /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 12,
       color: cat.color,
@@ -2314,9 +2320,9 @@ function FinanceScreen({
     style: {
       fontSize: 14,
       fontWeight: 700,
-      color: parseFloat(d.amount) >= 0 ? "#4ADE80" : "#F87171"
+      color: parseVal(d.amount) >= 0 ? "#4ADE80" : "#F87171"
     }
-  }, parseFloat(d.amount) >= 0 ? "+" : "", parseFloat(d.amount).toFixed(0), "€"))), /*#__PURE__*/React.createElement("div", {
+  }, parseVal(d.amount) >= 0 ? "+" : "", parseVal(d.amount).toFixed(0), "€"))), /*#__PURE__*/React.createElement("div", {
     style: {
       borderTop: "1px solid #2C2C2E",
       marginTop: 8,
@@ -2333,9 +2339,9 @@ function FinanceScreen({
     style: {
       fontSize: 14,
       fontWeight: 700,
-      color: debts.reduce((s, d) => s + parseFloat(d.amount || 0), 0) >= 0 ? "#4ADE80" : "#F87171"
+      color: debts.reduce((s, d) => s + parseVal(d.amount || 0), 0) >= 0 ? "#4ADE80" : "#F87171"
     }
-  }, debts.reduce((s, d) => s + parseFloat(d.amount || 0), 0) >= 0 ? "+" : "", debts.reduce((s, d) => s + parseFloat(d.amount || 0), 0).toFixed(0), "€"))), filteredEntries.length === 0 && entries.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, debts.reduce((s, d) => s + parseVal(d.amount || 0), 0) >= 0 ? "+" : "", debts.reduce((s, d) => s + parseVal(d.amount || 0), 0).toFixed(0), "€"))), filteredEntries.length === 0 && entries.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: "center",
       color: "#48484A",
@@ -6413,15 +6419,16 @@ function DailyScreen({
   onDeleteTodo
 }) {
   const tk = todayStr();
+  const [selectedDay, setSelectedDay] = useState(tk);
   const [fitData, setFitData] = useState(() => ls_get(FITNESS_KEY, {}));
   const [dietData, setDietData] = useState(() => ls_get(DIET_KEY, {}));
   const [sgData, setSgData] = useState(() => ls_get(SELFGROWTH_KEY, {}));
   const [saved, setSaved] = useState(false);
 
   // local state seeded from today's stored data
-  const fd = fitData[tk] || {},
-    dd = dietData[tk] || {},
-    sg = sgData[tk] || {};
+  const fd = fitData[selectedDay] || {},
+    dd = dietData[selectedDay] || {},
+    sg = sgData[selectedDay] || {};
   const [gym, setGym] = useState(!!fd.gym);
   const [run, setRun] = useState(!!fd.run);
   const [stretching, setStretching] = useState(!!fd.stretching);
@@ -6440,16 +6447,35 @@ function DailyScreen({
   const pending = todos.filter(t => !t.done);
   const done = todos.filter(t => t.done);
   const toggleSupp = s => setSupps(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]);
+
+  // Re-seed state when selectedDay changes
+  useEffect(() => {
+    const fd2 = fitData[selectedDay] || {};
+    const dd2 = dietData[selectedDay] || {};
+    const sg2 = sgData[selectedDay] || {};
+    setGym(!!fd2.gym);
+    setRun(!!fd2.run);
+    setStretching(!!fd2.stretching);
+    setSteps(fd2.steps || "");
+    setKcal(dd2.kcal || "");
+    setProtein(dd2.protein || "");
+    setCarbs(dd2.carbs || "");
+    setFat(dd2.fat || "");
+    setSupps(dd2.supps || []);
+    setMeditation(!!sg2.meditation);
+    setDream(sg2.dream || "");
+    setPages(sg2.pages || "");
+  }, [selectedDay]);
   const saveAll = () => {
     const newFit = {
-      ...fd,
+      ...fitData[selectedDay],
       gym,
       run,
       stretching,
       steps: parseInt(steps) || 0
     };
     const newDiet = {
-      ...dd,
+      ...dietData[selectedDay],
       kcal: parseFloat(kcal) || 0,
       protein: parseFloat(protein) || 0,
       carbs: parseFloat(carbs) || 0,
@@ -6457,7 +6483,7 @@ function DailyScreen({
       supps
     };
     const newSg = {
-      ...sg,
+      ...sgData[selectedDay],
       meditation,
       dream: dream.trim(),
       pages: parseInt(pages) || 0
@@ -6465,7 +6491,7 @@ function DailyScreen({
     setFitData(p => {
       const n = {
         ...p,
-        [tk]: newFit
+        [selectedDay]: newFit
       };
       ls_set(FITNESS_KEY, n);
       return n;
@@ -6473,7 +6499,7 @@ function DailyScreen({
     setDietData(p => {
       const n = {
         ...p,
-        [tk]: newDiet
+        [selectedDay]: newDiet
       };
       ls_set(DIET_KEY, n);
       return n;
@@ -6481,7 +6507,7 @@ function DailyScreen({
     setSgData(p => {
       const n = {
         ...p,
-        [tk]: newSg
+        [selectedDay]: newSg
       };
       ls_set(SELFGROWTH_KEY, n);
       return n;
@@ -6606,7 +6632,22 @@ function DailyScreen({
       fontSize: 22,
       fontWeight: 700
     }
-  }, subview === "todos" ? "Daily To-Do" : "Daily Flags"), /*#__PURE__*/React.createElement("p", {
+  }, subview === "todos" ? "Daily To-Do" : "Daily Flags"), subview !== "todos" && /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: selectedDay,
+    max: tk,
+    onChange: e => setSelectedDay(e.target.value),
+    style: {
+      background: "rgba(255,255,255,0.12)",
+      border: "1px solid rgba(255,255,255,0.2)",
+      borderRadius: 10,
+      padding: "5px 10px",
+      fontSize: 12,
+      color: "rgba(255,255,255,0.9)",
+      outline: "none",
+      marginTop: 4
+    }
+  }), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
       color: cat.color,
@@ -7334,7 +7375,7 @@ function ShoppingScreen({
         margin: "0 0 8px"
       }
     }, "Price (€, optional)"), /*#__PURE__*/React.createElement("input", {
-      type: "number",
+      type: "text",
       inputMode: "decimal",
       value: price,
       onChange: e => setPrice(e.target.value),
@@ -10786,9 +10827,4 @@ function App() {
     onClose: () => setShowManage(false),
     onSave: handleManageSave
   }));
-}
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
-  </script>
-</body>
-</html>
+}const root=ReactDOM.createRoot(document.getElementById("root"));root.render(React.createElement(App));</script></body></html>
