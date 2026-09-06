@@ -1867,9 +1867,11 @@ function FinanceScreen({
     method: m,
     balance: parseVal(baseline[m] || 0) + entries.filter(e => e.type === "income" && e.method === m).reduce((s, e) => s + e.amount, 0) - entries.filter(e => e.type === "expense" && e.method === m).reduce((s, e) => s + e.amount, 0) - entries.filter(e => e.type === "transfer" && e.method === m).reduce((s, e) => s + e.amount, 0) + entries.filter(e => e.type === "transfer" && e.toMethod === m).reduce((s, e) => s + e.amount, 0)
   }));
+  const debtsNet = debts.reduce((s, d) => s + parseVal(d.amount || 0), 0);
   const totalBaseline = PAYMENT_METHODS.reduce((s, m) => s + parseVal(baseline[m] || 0), 0);
-  const totalAvailable = totalBaseline + netTx;
+  const totalAvailable = totalBaseline + netTx + debtsNet;
   const baselineSet = PAYMENT_METHODS.some(m => parseVal(baseline[m] || 0) !== 0);
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const handleNotesChange = val => {
     setLocalNotes(val);
     clearTimeout(notesTimer.current);
@@ -2127,13 +2129,17 @@ function FinanceScreen({
       WebkitOverflowScrolling: "touch",
       padding: "16px 16px 120px"
     }
-  }, mainTab === "overview" && /*#__PURE__*/React.createElement(React.Fragment, null, baselineSet && /*#__PURE__*/React.createElement("div", {
+  }, mainTab === "overview" && /*#__PURE__*/React.createElement(React.Fragment, null, baselineSet && /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowBreakdown(v => !v),
     style: {
+      width: "100%",
       background: "#1C1C1E",
       borderRadius: 16,
       padding: "16px 18px",
-      marginBottom: 12,
-      border: `1px solid ${cat.color}30`
+      marginBottom: 8,
+      border: `1px solid ${cat.color}30`,
+      textAlign: "left",
+      cursor: "pointer"
     }
   }, /*#__PURE__*/React.createElement("p", {
     style: {
@@ -2150,7 +2156,49 @@ function FinanceScreen({
       fontWeight: 700,
       color: totalAvailable >= 0 ? "#4ADE80" : "#F87171"
     }
-  }, totalAvailable >= 0 ? "+" : "-", "€", Math.abs(totalAvailable).toFixed(0))), baselineSet && /*#__PURE__*/React.createElement("div", {
+  }, totalAvailable >= 0 ? "+" : "-", "€", fmtNum(Math.abs(totalAvailable))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "4px 0 0",
+      fontSize: 11,
+      color: "#48484A"
+    }
+  }, "Tap for breakdown")), baselineSet && showBreakdown && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#2C2C2E",
+      borderRadius: 12,
+      padding: "12px 14px",
+      marginBottom: 8
+    }
+  }, [{
+    label: "💵 Liquidity",
+    val: accountBalances.filter(a => a.method !== "Investments").reduce((s, a) => s + a.balance, 0)
+  }, {
+    label: "📈 Investments",
+    val: accountBalances.find(a => a.method === "Investments")?.balance || 0
+  }, {
+    label: "⇄ Debts & Credits",
+    val: debtsNet
+  }].map(r => /*#__PURE__*/React.createElement("div", {
+    key: r.label,
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "6px 0",
+      borderBottom: "1px solid #3A3A3A"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: "#8E8E93"
+    }
+  }, r.label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      fontWeight: 700,
+      color: r.val >= 0 ? "#4ADE80" : "#F87171"
+    }
+  }, r.val >= 0 ? "+" : "", fmtCurrency(r.val))))), baselineSet && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr",
@@ -2270,78 +2318,7 @@ function FinanceScreen({
       fontWeight: 700,
       color: s.clr
     }
-  }, s.val)))), debts.length > 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: "#1C1C1E",
-      borderRadius: 14,
-      padding: "14px 16px",
-      marginBottom: 12,
-      border: `1px solid ${cat.color}20`
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: 12,
-      color: "#636366",
-      textTransform: "uppercase",
-      letterSpacing: 1
-    }
-  }, "Debts & Credits"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setShowDebts(true),
-    style: {
-      background: "none",
-      border: "none",
-      color: cat.color,
-      fontSize: 12,
-      cursor: "pointer",
-      fontWeight: 600
-    }
-  }, "Edit")), debts.map(d => /*#__PURE__*/React.createElement("div", {
-    key: d.id,
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 13,
-      color: "#E5E5EA"
-    }
-  }, d.name), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 14,
-      fontWeight: 700,
-      color: parseVal(d.amount) >= 0 ? "#4ADE80" : "#F87171"
-    }
-  }, parseVal(d.amount) >= 0 ? "+" : "", parseVal(d.amount).toFixed(0), "€"))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      borderTop: "1px solid #2C2C2E",
-      marginTop: 8,
-      paddingTop: 8,
-      display: "flex",
-      justifyContent: "space-between"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 12,
-      color: "#636366"
-    }
-  }, "Net position"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 14,
-      fontWeight: 700,
-      color: debts.reduce((s, d) => s + parseVal(d.amount || 0), 0) >= 0 ? "#4ADE80" : "#F87171"
-    }
-  }, debts.reduce((s, d) => s + parseVal(d.amount || 0), 0) >= 0 ? "+" : "", debts.reduce((s, d) => s + parseVal(d.amount || 0), 0).toFixed(0), "€"))), filteredEntries.length === 0 && entries.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, s.val)))), filteredEntries.length === 0 && entries.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: "center",
       color: "#48484A",
@@ -3774,6 +3751,7 @@ function DietScreen({
       inputMode: "decimal",
       value: val,
       onChange: e => set(e.target.value),
+      onBlur: e => e.preventDefault(),
       placeholder: "0",
       style: {
         width: "100%",
@@ -3821,14 +3799,17 @@ function DietScreen({
         cursor: "pointer"
       }
     }, "Cancel"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => saveDay(dk, {
-        kcal: parseFloat(kcal) || 0,
-        protein: parseFloat(protein) || 0,
-        carbs: parseFloat(carbs) || 0,
-        fat: parseFloat(fat) || 0,
-        supps,
-        note: note.trim()
-      }),
+      onClick: () => {
+        const ck = Math.round((parseFloat(protein) || 0) * 4 + (parseFloat(carbs) || 0) * 4 + (parseFloat(fat) || 0) * 9);
+        saveDay(dk, {
+          kcal: ck,
+          protein: parseFloat(protein) || 0,
+          carbs: parseFloat(carbs) || 0,
+          fat: parseFloat(fat) || 0,
+          supps,
+          note: note.trim()
+        });
+      },
       style: {
         background: cat.color,
         border: "none",
@@ -3859,12 +3840,6 @@ function DietScreen({
         marginBottom: 14
       }
     }, [{
-      lbl: "kcal",
-      unit: "kcal",
-      val: kcal,
-      set: setKcal,
-      clr: "#F87171"
-    }, {
       lbl: "Protein",
       unit: "g",
       val: protein,
@@ -6474,9 +6449,10 @@ function DailyScreen({
       stretching,
       steps: parseInt(steps) || 0
     };
+    const computedKcal = Math.round((parseFloat(protein) || 0) * 4 + (parseFloat(carbs) || 0) * 4 + (parseFloat(fat) || 0) * 9);
     const newDiet = {
       ...dietData[selectedDay],
-      kcal: parseFloat(kcal) || 0,
+      kcal: computedKcal,
       protein: parseFloat(protein) || 0,
       carbs: parseFloat(carbs) || 0,
       fat: parseFloat(fat) || 0,
@@ -6562,25 +6538,32 @@ function DailyScreen({
     set,
     placeholder,
     large
-  }) => /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    inputMode: "decimal",
-    value: val,
-    onChange: e => set(e.target.value),
-    placeholder: placeholder || "0",
-    style: {
-      width: "100%",
-      boxSizing: "border-box",
-      background: "#2C2C2E",
-      border: "none",
-      borderRadius: 10,
-      padding: large ? "10px 12px" : "8px 12px",
-      fontSize: large ? 20 : 15,
-      fontWeight: 700,
-      outline: "none",
-      color: "#F2F2F7"
-    }
-  });
+  }) => {
+    const ref = useRef(null);
+    return /*#__PURE__*/React.createElement("input", {
+      ref: ref,
+      type: "text",
+      inputMode: "decimal",
+      value: val,
+      onChange: e => set(e.target.value),
+      onBlur: e => {
+        e.preventDefault();
+      },
+      placeholder: placeholder || "0",
+      style: {
+        width: "100%",
+        boxSizing: "border-box",
+        background: "#2C2C2E",
+        border: "none",
+        borderRadius: 10,
+        padding: large ? "10px 12px" : "8px 12px",
+        fontSize: large ? 20 : 15,
+        fontWeight: 700,
+        outline: "none",
+        color: "#F2F2F7"
+      }
+    });
+  };
   return /*#__PURE__*/React.createElement("div", {
     style: {
       height: "100dvh",
@@ -6984,19 +6967,41 @@ function DailyScreen({
   })), /*#__PURE__*/React.createElement(Section, {
     title: "Diet & Nutrition",
     color: "#FBBF24"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, (() => {
+    const computedKcal = Math.round((parseFloat(protein) || 0) * 4 + (parseFloat(carbs) || 0) * 4 + (parseFloat(fat) || 0) * 9);
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "#2C2C2E",
+        borderRadius: 10,
+        padding: "10px 14px",
+        marginBottom: 10,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: "#636366",
+        textTransform: "uppercase",
+        letterSpacing: 1,
+        fontWeight: 700
+      }
+    }, "Kcal (calculated)"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 22,
+        fontWeight: 800,
+        color: "#F87171"
+      }
+    }, computedKcal));
+  })(), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
-      gridTemplateColumns: "1fr 1fr",
+      gridTemplateColumns: "1fr 1fr 1fr",
       gap: 8,
       marginBottom: 10
     }
   }, [{
-    lbl: "kcal",
-    val: kcal,
-    set: setKcal,
-    clr: "#F87171"
-  }, {
     lbl: "Protein (g)",
     val: protein,
     set: setProtein,
