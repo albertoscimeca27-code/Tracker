@@ -6400,30 +6400,43 @@ function DailyScreen({
   const [sgData, setSgData] = useState(() => ls_get(SELFGROWTH_KEY, {}));
   const [saved, setSaved] = useState(false);
 
-  // local state seeded from today's stored data
+  // Flags (toggles — these are fine as state)
   const fd = fitData[selectedDay] || {},
     dd = dietData[selectedDay] || {},
     sg = sgData[selectedDay] || {};
   const [gym, setGym] = useState(!!fd.gym);
   const [run, setRun] = useState(!!fd.run);
   const [stretching, setStretching] = useState(!!fd.stretching);
-  const [steps, setSteps] = useState(fd.steps || "");
-  const [kcal, setKcal] = useState(dd.kcal || "");
-  const [protein, setProtein] = useState(dd.protein || "");
-  const [carbs, setCarbs] = useState(dd.carbs || "");
-  const [fat, setFat] = useState(dd.fat || "");
   const [supps, setSupps] = useState(dd.supps || []);
   const [meditation, setMeditation] = useState(!!sg.meditation);
-  const [dream, setDream] = useState(sg.dream || "");
-  const [pages, setPages] = useState(sg.pages || "");
+
+  // Numeric inputs — use refs to avoid re-render/keyboard dismiss on every keystroke
+  const stepsRef = useRef(null);
+  const proteinRef = useRef(null);
+  const carbsRef = useRef(null);
+  const fatRef = useRef(null);
+  const pagesRef = useRef(null);
+  const dreamRef = useRef(null);
   const [newTodo, setNewTodo] = useState("");
   const inputRef = useRef(null);
+
+  // Computed kcal display — updates on blur not on keystroke
+  const [displayKcal, setDisplayKcal] = useState(() => {
+    const d = ls_get(DIET_KEY, {})[tk] || {};
+    return Math.round((d.protein || 0) * 4 + (d.carbs || 0) * 4 + (d.fat || 0) * 9);
+  });
+  const updateKcal = () => {
+    const p = parseFloat(proteinRef.current?.value) || 0;
+    const c = parseFloat(carbsRef.current?.value) || 0;
+    const f = parseFloat(fatRef.current?.value) || 0;
+    setDisplayKcal(Math.round(p * 4 + c * 4 + f * 9));
+  };
   const todos = data["misc"] || [];
   const pending = todos.filter(t => !t.done);
   const done = todos.filter(t => t.done);
   const toggleSupp = s => setSupps(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]);
 
-  // Re-seed state when selectedDay changes
+  // Re-seed inputs when selectedDay changes
   useEffect(() => {
     const fd2 = fitData[selectedDay] || {};
     const dd2 = dietData[selectedDay] || {};
@@ -6431,38 +6444,55 @@ function DailyScreen({
     setGym(!!fd2.gym);
     setRun(!!fd2.run);
     setStretching(!!fd2.stretching);
-    setSteps(fd2.steps || "");
-    setKcal(dd2.kcal || "");
-    setProtein(dd2.protein || "");
-    setCarbs(dd2.carbs || "");
-    setFat(dd2.fat || "");
     setSupps(dd2.supps || []);
     setMeditation(!!sg2.meditation);
-    setDream(sg2.dream || "");
-    setPages(sg2.pages || "");
+    setDisplayKcal(Math.round((dd2.protein || 0) * 4 + (dd2.carbs || 0) * 4 + (dd2.fat || 0) * 9));
+    // Set ref input values directly
+    if (stepsRef.current) stepsRef.current.value = fd2.steps || "";
+    if (proteinRef.current) proteinRef.current.value = dd2.protein || "";
+    if (carbsRef.current) carbsRef.current.value = dd2.carbs || "";
+    if (fatRef.current) fatRef.current.value = dd2.fat || "";
+    if (pagesRef.current) pagesRef.current.value = sg2.pages || "";
+    if (dreamRef.current) dreamRef.current.value = sg2.dream || "";
   }, [selectedDay]);
+
+  // Seed ref defaults on first mount
+  useEffect(() => {
+    if (stepsRef.current) stepsRef.current.value = fd.steps || "";
+    if (proteinRef.current) proteinRef.current.value = dd.protein || "";
+    if (carbsRef.current) carbsRef.current.value = dd.carbs || "";
+    if (fatRef.current) fatRef.current.value = dd.fat || "";
+    if (pagesRef.current) pagesRef.current.value = sg.pages || "";
+    if (dreamRef.current) dreamRef.current.value = sg.dream || "";
+  }, []);
   const saveAll = () => {
+    const steps = parseInt(stepsRef.current?.value) || 0;
+    const protein = parseFloat(proteinRef.current?.value) || 0;
+    const carbs = parseFloat(carbsRef.current?.value) || 0;
+    const fat = parseFloat(fatRef.current?.value) || 0;
+    const pages = parseInt(pagesRef.current?.value) || 0;
+    const dream = (dreamRef.current?.value || "").trim();
+    const computedKcal = Math.round(protein * 4 + carbs * 4 + fat * 9);
     const newFit = {
       ...fitData[selectedDay],
       gym,
       run,
       stretching,
-      steps: parseInt(steps) || 0
+      steps
     };
-    const computedKcal = Math.round((parseFloat(protein) || 0) * 4 + (parseFloat(carbs) || 0) * 4 + (parseFloat(fat) || 0) * 9);
     const newDiet = {
       ...dietData[selectedDay],
       kcal: computedKcal,
-      protein: parseFloat(protein) || 0,
-      carbs: parseFloat(carbs) || 0,
-      fat: parseFloat(fat) || 0,
+      protein,
+      carbs,
+      fat,
       supps
     };
     const newSg = {
       ...sgData[selectedDay],
       meditation,
-      dream: dream.trim(),
-      pages: parseInt(pages) || 0
+      dream,
+      pages
     };
     setFitData(p => {
       const n = {
@@ -6488,6 +6518,7 @@ function DailyScreen({
       ls_set(SELFGROWTH_KEY, n);
       return n;
     });
+    setDisplayKcal(computedKcal);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -6959,42 +6990,51 @@ function DailyScreen({
     label: "⟡ Stretch",
     color: "#F59E0B",
     onToggle: () => setStretching(v => !v)
-  })), /*#__PURE__*/React.createElement(NumInput, {
-    val: steps,
-    set: setSteps,
+  })), /*#__PURE__*/React.createElement("input", {
+    ref: stepsRef,
+    type: "text",
+    inputMode: "numeric",
     placeholder: "Steps today",
-    large: true
+    style: {
+      width: "100%",
+      boxSizing: "border-box",
+      background: "#2C2C2E",
+      border: "none",
+      borderRadius: 10,
+      padding: "10px 12px",
+      fontSize: 20,
+      fontWeight: 700,
+      outline: "none",
+      color: "#F2F2F7"
+    }
   })), /*#__PURE__*/React.createElement(Section, {
     title: "Diet & Nutrition",
     color: "#FBBF24"
-  }, (() => {
-    const computedKcal = Math.round((parseFloat(protein) || 0) * 4 + (parseFloat(carbs) || 0) * 4 + (parseFloat(fat) || 0) * 9);
-    return /*#__PURE__*/React.createElement("div", {
-      style: {
-        background: "#2C2C2E",
-        borderRadius: 10,
-        padding: "10px 14px",
-        marginBottom: 10,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 11,
-        color: "#636366",
-        textTransform: "uppercase",
-        letterSpacing: 1,
-        fontWeight: 700
-      }
-    }, "Kcal (calculated)"), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 22,
-        fontWeight: 800,
-        color: "#F87171"
-      }
-    }, computedKcal));
-  })(), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#2C2C2E",
+      borderRadius: 10,
+      padding: "10px 14px",
+      marginBottom: 10,
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: "#636366",
+      textTransform: "uppercase",
+      letterSpacing: 1,
+      fontWeight: 700
+    }
+  }, "Kcal (calculated)"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 22,
+      fontWeight: 800,
+      color: "#F87171"
+    }
+  }, displayKcal || "—")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr 1fr",
@@ -7002,24 +7042,20 @@ function DailyScreen({
       marginBottom: 10
     }
   }, [{
-    lbl: "Protein (g)",
-    val: protein,
-    set: setProtein,
+    lbl: "Protein",
+    ref: proteinRef,
     clr: "#60A5FA"
   }, {
-    lbl: "Carbs (g)",
-    val: carbs,
-    set: setCarbs,
+    lbl: "Carbs",
+    ref: carbsRef,
     clr: "#FBBF24"
   }, {
-    lbl: "Fat (g)",
-    val: fat,
-    set: setFat,
+    lbl: "Fat",
+    ref: fatRef,
     clr: "#A78BFA"
   }].map(({
     lbl,
-    val,
-    set,
+    ref,
     clr
   }) => /*#__PURE__*/React.createElement("div", {
     key: lbl
@@ -7032,9 +7068,24 @@ function DailyScreen({
       letterSpacing: 1,
       margin: "0 0 4px"
     }
-  }, lbl), /*#__PURE__*/React.createElement(NumInput, {
-    val: val,
-    set: set
+  }, lbl), /*#__PURE__*/React.createElement("input", {
+    ref: ref,
+    type: "text",
+    inputMode: "decimal",
+    placeholder: "0",
+    onBlur: updateKcal,
+    style: {
+      width: "100%",
+      boxSizing: "border-box",
+      background: "#2C2C2E",
+      border: "none",
+      borderRadius: 10,
+      padding: "8px 10px",
+      fontSize: 16,
+      fontWeight: 700,
+      outline: "none",
+      color: "#F2F2F7"
+    }
   })))), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 11,
@@ -7089,23 +7140,35 @@ function DailyScreen({
       margin: "0 0 6px",
       fontWeight: 700
     }
-  }, "▣ Pages read"), /*#__PURE__*/React.createElement(NumInput, {
-    val: pages,
-    set: setPages,
+  }, "▣ Pages read"), /*#__PURE__*/React.createElement("input", {
+    ref: pagesRef,
+    type: "text",
+    inputMode: "numeric",
     placeholder: "0",
-    large: true
+    style: {
+      width: "100%",
+      boxSizing: "border-box",
+      background: "#2C2C2E",
+      border: "none",
+      borderRadius: 10,
+      padding: "10px 12px",
+      fontSize: 20,
+      fontWeight: 700,
+      outline: "none",
+      color: "#F2F2F7",
+      marginBottom: 12
+    }
   }), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 11,
       color: "#F472B6",
       textTransform: "uppercase",
       letterSpacing: 1,
-      margin: "12px 0 6px",
+      margin: "0 0 6px",
       fontWeight: 700
     }
   }, "✦ Dream annotation"), /*#__PURE__*/React.createElement("textarea", {
-    value: dream,
-    onChange: e => setDream(e.target.value),
+    ref: dreamRef,
     placeholder: "Write down what you dreamed...",
     style: {
       width: "100%",
